@@ -11,7 +11,8 @@ app.use(cors());
 Connection();
 
 app.get('/', (req,res)=>{
-    res.send('App is working...')
+    console.log('just check')
+    res.send('App is working!!!!!')
 })
 
 app.use("/api/auth", require("./src/routes/authRoutes"));
