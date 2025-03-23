@@ -8,8 +8,6 @@ const https = require("https");
 
 // const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
-// console.log('check the client', client);
-
 
 // exports.sendOTP = async (req, res) => {
 //   const { phone } = req.body;
@@ -35,9 +33,7 @@ const https = require("https");
 
 
 //     res.json({ message: `OTP sent successfully to ${phone}` }); 
-//   } catch (err) {
-//     console.log('error====', err);
-    
+//   } catch (err) {    
 //     res.status(500).json({ error: "Failed to send OTP" });
 //   }
 // };
@@ -71,12 +67,9 @@ const https = require("https");
 //             'Content-Type': 'application/json',
 //           },
 //         }
-//       );
-//   console.log('response:::', response);
-  
+//       );  
 //       res.json({ message: `OTP sent successfully to ${phone}` });
 //     } catch (err) {
-//       console.log("Fast2SMS error:", err.response?.data || err.message);
 //       res.status(500).json({ error: "Failed to send OTP" });
 //     }
 //   };
@@ -108,18 +101,13 @@ const https = require("https");
 //     }
 //   };
 
-exports.sendOTP = async (req, res) => {
-  console.log('sendotp called');
-  
+exports.sendOTP = async (req, res) => {  
   const { phone } = req.body;
   const otp = generateOTP();
-  console.log('top', otp);
   
   const otpExpires = new Date(Date.now() + 2 * 60 * 1000); 
 
-  try {
-    console.log('inside the try block...');
-    
+  try {    
     let user = await User.findOne({ phone });
     if (!user) user = new User({ phone, otp, otpExpires });
     else {
@@ -133,17 +121,10 @@ exports.sendOTP = async (req, res) => {
 
     // 👇 Add this agent to bypass SSL issue (only for test)
     const agent = new https.Agent({ rejectUnauthorized: false });
-
-    await axios.get(url, { httpsAgent: agent });
-    console.log('otp send successfully...');
-    
+    await axios.get(url, { httpsAgent: agent });    
 
     res.json({ message: `OTP sent to ${phone}` });
   } catch (err) {
-    console.log('isnide the catch block');
-    
-    console.log('err', err);
-    
     console.error("2Factor error:", err.response?.data || err.message);
     res.status(500).json({ error: "Failed to send OTP" });
   }
@@ -168,9 +149,7 @@ exports.verifyOTP = async (req, res) => {
     });
 
     res.json({ message: "Phone verified successfully", token });
-  } catch (err) {
-    console.log('err', err);
-    
+  } catch (err) {    
     res.status(500).json({ error: "OTP verification failed" });
   }
 };
