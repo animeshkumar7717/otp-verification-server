@@ -3,6 +3,8 @@ const generateOTP = require("../utils/generateOTP");
 const jwt = require("jsonwebtoken");
 const User = require("../model/user-schema");
 const { default: axios } = require("axios");
+const https = require("https");
+
 
 // const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
@@ -79,31 +81,73 @@ const { default: axios } = require("axios");
 //     }
 //   };
 
+// Two Factor
+// exports.sendOTP = async (req, res) => {
+//     const { phone } = req.body;
+//     const otp = generateOTP();
+//     const otpExpires = new Date(Date.now() + 2 * 60 * 1000); // 2 mins
+  
+//     try {
+//       let user = await User.findOne({ phone });
+//       if (!user) user = new User({ phone, otp, otpExpires });
+//       else {
+//         user.otp = otp;
+//         user.otpExpires = otpExpires;
+//       }
+  
+//       await user.save();
+  
+//       const url = `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/+91${phone}/${otp}/OTP`;
+  
+//       await axios.get(url);
+  
+//       res.json({ message: `OTP sent to ${phone}` });
+//     } catch (err) {
+//       console.error("2Factor error:", err.response?.data || err.message);
+//       res.status(500).json({ error: "Failed to send OTP" });
+//     }
+//   };
+
 exports.sendOTP = async (req, res) => {
-    const { phone } = req.body;
-    const otp = generateOTP();
-    const otpExpires = new Date(Date.now() + 2 * 60 * 1000); // 2 mins
+  console.log('sendotp called');
   
-    try {
-      let user = await User.findOne({ phone });
-      if (!user) user = new User({ phone, otp, otpExpires });
-      else {
-        user.otp = otp;
-        user.otpExpires = otpExpires;
-      }
+  const { phone } = req.body;
+  const otp = generateOTP();
+  console.log('top', otp);
   
-      await user.save();
-  
-      const url = `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/+91${phone}/${otp}/OTP`;
-  
-      await axios.get(url);
-  
-      res.json({ message: `OTP sent to ${phone}` });
-    } catch (err) {
-      console.error("2Factor error:", err.response?.data || err.message);
-      res.status(500).json({ error: "Failed to send OTP" });
+  const otpExpires = new Date(Date.now() + 2 * 60 * 1000); 
+
+  try {
+    console.log('inside the try block...');
+    
+    let user = await User.findOne({ phone });
+    if (!user) user = new User({ phone, otp, otpExpires });
+    else {
+      user.otp = otp;
+      user.otpExpires = otpExpires;
     }
-  };
+
+    await user.save();
+
+    const url = `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/+91${phone}/${otp}/OTP`;
+
+    // 👇 Add this agent to bypass SSL issue (only for test)
+    const agent = new https.Agent({ rejectUnauthorized: false });
+
+    await axios.get(url, { httpsAgent: agent });
+    console.log('otp send successfully...');
+    
+
+    res.json({ message: `OTP sent to ${phone}` });
+  } catch (err) {
+    console.log('isnide the catch block');
+    
+    console.log('err', err);
+    
+    console.error("2Factor error:", err.response?.data || err.message);
+    res.status(500).json({ error: "Failed to send OTP" });
+  }
+};
 
 exports.verifyOTP = async (req, res) => {
   const { phone, otp } = req.body;
